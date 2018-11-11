@@ -1,0 +1,57 @@
+[{
+    charset = {
+        [
+            [32, 127], // Latin
+            [161, 591], // Latin
+            [1024, 1327], // Cyrilic
+            [880, 1023], // Greek
+            [8704, 8959] // Math
+            [8240, 8241], // Per mille
+            [8592, 8703], // Arrows
+            [10496, 10623] // Arrows
+            //[19968, 40943] // CKJ
+            //[12352, 12447]; // 平仮名
+            //[12448, 12543]; // 片仮名
+            //[4352, 4607]; // 한글
+        ]
+    },
+    tasks = [
+        {
+            font = "Lato",
+            isItalic = false,
+            isBold = false,
+            color = "#FFFFFF"
+        },
+        {
+            font = "Lato",
+            isItalic = false,
+            isBold = true,
+            color = "#FFFFFF"
+        },
+        {
+            font = "Lato",
+            isItalic = false,
+            isBold = false,
+            color = "#000000"
+        },
+        {
+            font = "Lato",
+            isItalic = false,
+            isBold = true,
+            color = "#000000"
+        },
+        // {
+        //     font = "Alte DIN 1451 Mittelschrift",
+        //     isItalic = false,
+        //     isBold = false,
+        //     color = "#000000"
+        // },
+        // {
+        //     font = "Alte DIN 1451 Mittelschrift",
+        //     isItalic = false,
+        //     isBold = false,
+        //     color = "#FFFFFF"
+        // },
+    ]
+}
+]
