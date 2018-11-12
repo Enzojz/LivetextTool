@@ -34,7 +34,9 @@ let main argv =
     | 'Y' | 'y' ->
       printfn "\nGenerating the meshes, please wait..."
       if Directory.Exists("res") then
-        Directory.Delete("res", true)
+        let res = new DirectoryInfo("res")
+        res.EnumerateFiles() |> Seq.iter (fun f -> f.Delete())
+        res.EnumerateDirectories() |> Seq.iter (fun d -> d.Delete(true))
       else
         ()
     
