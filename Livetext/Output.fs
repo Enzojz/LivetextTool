@@ -117,7 +117,7 @@ module Output =
           g.InterpolationMode <- InterpolationMode.HighQualityBicubic;
           g.PixelOffsetMode <- PixelOffsetMode.HighQuality;
           g.TextRenderingHint <- TextRenderingHint.AntiAliasGridFit;
-
+           
           g.FillRectangle(new SolidBrush(color), rect);
           g.Flush()
 
@@ -126,8 +126,13 @@ module Output =
           Marshal.Copy(bmpData.Scan0, data, 0, bmpData.Stride * bmpData.Height);
           bmp.UnlockBits(bmpData);
 
+          let rec exchangeRB (data : byte list) = 
+            match data with
+            | a :: r :: g :: b :: rest -> g :: r :: a :: b :: (exchangeRB rest)
+            | [] -> []
+          
           let dest : byte [] = Array.zeroCreate(Squish.GetStorageRequirements(size.Width, size.Height, SquishFlags.kDxt5))
-          Squish.Squish.CompressImage(data, size.Width, size.Height, ref dest, SquishFlags.kDxt5);
+          Squish.Squish.CompressImage(data |> Array.toList |> exchangeRB |> List.toArray, size.Width, size.Height, ref dest, SquishFlags.kDxt5);
           (dest, size)
         ) in
         let colorName = sprintf "C%02X%02X%02X%02X" color.A color.R color.G color.B
@@ -183,16 +188,16 @@ module Output =
         }
       mesh
 
-    let generateMesh materialPath outputPath (glyph : uint32) =
-      let (blob, mesh) = Mesh.generate squareMesh (materialPath + glyph.ToString())
+    let generateMesh materials outputPath (glyph : uint32) =
+      let (blob, mesh) = Mesh.generate squareMesh materials
 
       let mshPath = outputPath + glyph.ToString() + ".msh"
       let blobPath = mshPath + ".blob"
       File.WriteAllBytes(blobPath, blob)
       File.WriteAllText(mshPath, mesh)
 
-    let generateModel meshPath outputPath (glyph : uint32) =
-      let mdl = 
+    let generateModel meshPath outputPath colors (glyph : uint32) =
+      let mdl i = 
         F ("data",
           P [
             ("collider", P [
@@ -213,7 +218,7 @@ module Output =
                   ]
                 ]);
                 ("events", A []);
-                ("matConfigs", A [A [V 0]]);
+                ("matConfigs", A [A [V i]]);
                 ("static", B true);
                 ("visibleFrom", V 0);
                 ("visibleTo", V 2000)
@@ -224,7 +229,7 @@ module Output =
         )
       |> printLua 0 in
 
-      File.WriteAllText(outputPath + glyph.ToString() + ".mdl", mdl)
+      colors |> List.iteri (fun i (color : Color) -> File.WriteAllText(outputPath + (sprintf "C%02X%02X%02X" color.R color.G color.B) + "/" + glyph.ToString() + ".mdl", mdl i))
       
     let GetFontParams (font : Font) cp =
       use graphics = Graphics.FromHwnd IntPtr.Zero
@@ -284,7 +289,7 @@ module Output =
        |> printLua 0
       System.IO.File.WriteAllText(scriptPath, lua);
             
-    let extractPolygon materialPath transMaterialPath outputPath (font : Font) =
+    let extractPolygon materials transMaterials outputPath (font : Font) =
       let transform = 
         use path = new GraphicsPath()
         path.AddString("M", font.FontFamily, (int)font.Style, font.Size, new PointF(0.0f, 0.0f), StringFormat.GenericTypographic)
@@ -354,7 +359,7 @@ module Output =
               |> List.collect(fun p -> List.ofSeq p.Triangles)
             with 
             | _ -> printfn "Error parsing %x" glyph; []
-        check triangles;
+        //check triangles;
         let vertices = 
           triangles
           |> List.collect(fun t -> List.ofSeq t.Points)
@@ -369,7 +374,7 @@ module Output =
           indices = List.init (List.length vertices / 3) (fun i -> new Tuple<int, int, int>(i * 3, i * 3 + 1, i * 3 + 2));
         }
 
-        let (blob, msh) = if vertices.IsEmpty then Mesh.generate squareMesh transMaterialPath else Mesh.generate mesh materialPath
+        let (blob, msh) = if vertices.IsEmpty then Mesh.generate squareMesh transMaterials else Mesh.generate mesh materials
       
         let mshPath = outputPath + glyph.ToString() + ".msh"
         let blobPath = mshPath + ".blob"

@@ -49,10 +49,10 @@ let main argv =
                 ("font", JsonValue.String font);
                 ("isItalic", JsonValue.Boolean isItalic);
                 ("isBold", JsonValue.Boolean isBold);
-                ("color", JsonValue.String color)
+                ("colors", JsonValue.Array colors)
                 |] ->
                   font, 
-                  (System.Drawing.ColorTranslator.FromHtml(color) |> fun c -> (c.R, c.G, c.B)),
+                  colors |> Array.toList |> List.map (function JsonValue.String color -> System.Drawing.ColorTranslator.FromHtml(color)),
                   match isItalic, isBold with 
                   | (false, false) -> FontStyle.Regular
                   | (false, true) -> FontStyle.Bold
@@ -62,7 +62,7 @@ let main argv =
         (cp, task)
 
     tasks 
-    |> Array.iter (fun (font, (r, g, b), style) -> Task.task cp font style ((int)r, (int)g, (int)b) )
+    |> Array.iter (fun (font, colors, style) -> Task.task cp font style colors )
 
         
 

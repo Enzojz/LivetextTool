@@ -52,7 +52,7 @@ module Mesh =
           |> List.collect(BitConverter.GetBytes >> Array.toList)
       mesh.vertices @ mesh.uv0 @ mesh.normals @ mesh.tangents @ mesh.uv1 @ indices |> List.toArray
 
-  let meshGen (mesh : ByteData) material =
+  let meshGen (mesh : ByteData) (materials : string list) =
     let d = sprintf "%d"
 
     let counts = {
@@ -71,7 +71,7 @@ module Mesh =
       uv1 = counts.vertices + counts.uv0 + counts.normals + counts.tangents
       }
 
-    let subMeshIndices data material offset =
+    let subMeshIndices data materials offset =
       let indiceLength = data.indices.Length * 3 * sizeof<int>
       let indiceAttr count offset =
           P [
@@ -86,7 +86,8 @@ module Mesh =
             ("tangent", indiceAttr indiceLength offset);
             ("uv0", indiceAttr indiceLength offset);
             ]);
-        ("materials", A [S(material + @".mtl")])]
+        ("materials", A (materials |> List.map (fun m -> S(m + ".mtl"))))
+      ]
 
     let vertexAttr count numComp offset = 
       P [
@@ -98,8 +99,8 @@ module Mesh =
     F("data",
       P [
         ("animations", A []);
-        ("matConfigs", A [A [V 0]]);
-        ("subMeshes", A [subMeshIndices mesh material (offsets.uv1 + counts.uv1)]);
+        ("matConfigs", A (materials |> List.mapi (fun i _ -> A [V i])));
+        ("subMeshes", A [subMeshIndices mesh materials (offsets.uv1 + counts.uv1)]);
         ("vertexAttr",
             P [
               ("normal", vertexAttr counts.normals 3 offsets.normals);
@@ -112,8 +113,8 @@ module Mesh =
       )
     |> printLua 0
 
-  let generate mesh material =
+  let generate mesh materials =
     let b = convertToBytes mesh
     let blob = blobGen b
-    let desc = meshGen b material
+    let desc = meshGen b materials
     (blob, desc)
