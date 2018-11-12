@@ -23,15 +23,6 @@ module Task =
       colors |> List.map (fun color -> Directory.CreateDirectory(modelPath + midFix + (sprintf "C%02X%02X%02X" color.R color.G color.B) + "/")) |> ignore
       Directory.CreateDirectory(scriptsPath + "livetext/")|> ignore
       
-      //cp.ToList().AsParallel()
-      //.ForAll(c =>
-      //{
-      //    Output.drawGlyph(font, midFix, texturesPath, materialPath, c);
-      //    Output.generateMesh(midFix, meshPath + midFix, c);
-      //    Output.generateModel(midFix, modelPath + midFix, c);
-      //}
-      //);
-
       let trans = colors |> List.map (fun _ -> Output.drawColorTexture midFix texturesPath materialPath (Color.FromArgb(0, 255, 255, 255)))
       let materials = 
         colors

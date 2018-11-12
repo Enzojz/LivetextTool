@@ -139,42 +139,7 @@ module Output =
         dds (texturesPath + "livetext/" + colorName) mipmap;
         generateMaterial ("models/livetext/" + colorName) (materialPath + "livetext/" + colorName);
         "livetext/" + colorName
-
-    let drawGlyph (font : Font) midFix texturesPath materialPath (gl : uint32) =
-      let mipmap =
-        [100; 50; 25]
-        |> List.map(fun s ->
-          let size = new Size(s, s)
-          let bmp = new Bitmap(size.Width, size.Height)
-          let rect = new Rectangle(new Point(0, 0), size)
-          let g = Graphics.FromImage(bmp)
-          g.SmoothingMode <- SmoothingMode.AntiAlias;
-          g.InterpolationMode <- InterpolationMode.HighQualityBicubic;
-          g.PixelOffsetMode <- PixelOffsetMode.HighQuality;
-          g.TextRenderingHint <- TextRenderingHint.AntiAliasGridFit;
-
-          g.FillRectangle(new SolidBrush(Color.FromArgb(0, 255, 255, 255)), rect);
-          g.DrawString (
-            (char gl).ToString(),
-            new Font(font.FontFamily, 0.6f * float32 s, font.Style),
-            new SolidBrush(Color.FromArgb(255, 255, 255, 255)),
-            new PointF(0.0f, 0.0f)
-            )
-          g.Flush()
-
-          let data : byte [] = Array.zeroCreate(size.Width * size.Height * 4)
-          let bmpData = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb)
-          Marshal.Copy(bmpData.Scan0, data, 0, bmpData.Stride * bmpData.Height);
-          bmp.UnlockBits(bmpData);
-
-          let dest : byte [] = Array.zeroCreate(Squish.GetStorageRequirements(size.Width, size.Height, SquishFlags.kDxt5))
-          Squish.Squish.CompressImage(data, size.Width, size.Height, ref dest, SquishFlags.kDxt5);
-          (dest, size)
-        ) in
-        dds (texturesPath + midFix + gl.ToString()) mipmap;
-        generateMaterial (midFix + gl.ToString()) (materialPath + midFix + gl.ToString());
-        midFix + gl.ToString()
-        
+ 
     let squareMesh =
       let polyBase = [(0, 1); (0, 0); (1, 0); (0, 1); (1, 0); (1, 1)]
       let uvBase = [(0, 0); (0, 1); (1, 1); (0, 0); (1, 1); (1, 0)]
@@ -187,15 +152,7 @@ module Output =
         indices = (0, 1, 2) :: (3, 4, 5) :: []
         }
       mesh
-
-    let generateMesh materials outputPath (glyph : uint32) =
-      let (blob, mesh) = Mesh.generate squareMesh materials
-
-      let mshPath = outputPath + glyph.ToString() + ".msh"
-      let blobPath = mshPath + ".blob"
-      File.WriteAllBytes(blobPath, blob)
-      File.WriteAllText(mshPath, mesh)
-
+      
     let generateModel meshPath outputPath colors (glyph : uint32) =
       let mdl i = 
         F ("data",

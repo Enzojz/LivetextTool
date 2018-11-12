@@ -25,60 +25,56 @@ let main argv =
     //  |> List.concat
     //  |> List.map (uint32)
     
-    if Directory.Exists("res") then
-      Directory.Delete("res", true)
-    else
-      ()
     
-    let value = JsonValue.Load("livetext.json")
+    printfn "!NOT ALL FONTS ARE FREEWARE!"
+    printfn "Press Y to confirm that you have the correct license for the intended usage, "
+    printfn "otherwise please press any key to close..."
 
-    let cp, tasks = 
-      match value with
-      | JsonValue.Record [|("charset", JsonValue.Array charset); ("tasks", JsonValue.Array tasks)|] ->
-        let cp = 
-          charset 
-          |> Array.map (function JsonValue.Array [|JsonValue.Number f; JsonValue.Number t; _|] -> [f .. t])
-          |> Array.toList
-          |> List.concat
-          |> List.map (uint32)
-        let task = 
-          tasks
-          |> Array.map (function 
-                JsonValue.Record 
-                [|
-                ("font", JsonValue.String font);
-                ("isItalic", JsonValue.Boolean isItalic);
-                ("isBold", JsonValue.Boolean isBold);
-                ("colors", JsonValue.Array colors)
-                |] ->
-                  font, 
-                  colors |> Array.toList |> List.map (function JsonValue.String color -> System.Drawing.ColorTranslator.FromHtml(color)),
-                  match isItalic, isBold with 
-                  | (false, false) -> FontStyle.Regular
-                  | (false, true) -> FontStyle.Bold
-                  | (true, false) -> FontStyle.Italic
-                  | (true, true) -> FontStyle.Bold ||| FontStyle.Italic
-          )
-        (cp, task)
+    match Console.ReadKey().KeyChar with
+    | 'Y' | 'y' ->
+      printfn "\nGenerating the meshes, please wait..."
+      if Directory.Exists("res") then
+        Directory.Delete("res", true)
+      else
+        ()
+    
+      let value = JsonValue.Load("livetext.json")
 
-    tasks 
-    |> Array.iter (fun (font, colors, style) -> Task.task cp font style colors )
-
+      let cp, tasks = 
+        match value with
+        | JsonValue.Record [|("charset", JsonValue.Array charset); ("tasks", JsonValue.Array tasks)|] ->
+          let cp = 
+            charset 
+            |> Array.map (function JsonValue.Array [|JsonValue.Number f; JsonValue.Number t; _|] -> [f .. t])
+            |> Array.toList
+            |> List.concat
+            |> List.map (uint32)
+          let task = 
+            tasks
+            |> Array.map (function 
+                  JsonValue.Record 
+                  [|
+                  ("font", JsonValue.String font);
+                  ("isItalic", JsonValue.Boolean isItalic);
+                  ("isBold", JsonValue.Boolean isBold);
+                  ("colors", JsonValue.Array colors)
+                  |] ->
+                    font, 
+                    colors |> Array.toList |> List.map (function JsonValue.String color -> System.Drawing.ColorTranslator.FromHtml(color)),
+                    match isItalic, isBold with 
+                    | (false, false) -> FontStyle.Regular
+                    | (false, true) -> FontStyle.Bold
+                    | (true, false) -> FontStyle.Italic
+                    | (true, true) -> FontStyle.Bold ||| FontStyle.Italic
+            )
+          (cp, task)
         
-
-    //Task.task cp "Lato" FontStyle.Regular (255, 255, 255)
-    //Task.task cp "Lato" FontStyle.Regular (0, 0, 0)
-    //Task.task cp "Lato" FontStyle.Bold (255, 255, 255)
-    //Task.task cp "Lato" FontStyle.Bold (0, 0, 0)
-
+      tasks 
+      |> Array.iter (fun (font, colors, style) -> Task.task cp font style colors )
     
-    //Task.task cp "Alte DIN 1451 Mittelschrift" FontStyle.Regular (255, 255, 255)
-    //Task.task cp "Alte DIN 1451 Mittelschrift" FontStyle.Regular (0, 0, 0)
-    //Task.task cp "Alte DIN 1451 Mittelschrift" FontStyle.Bold (255, 255, 255)
-    //Task.task cp "Alte DIN 1451 Mittelschrift" FontStyle.Bold (0, 0, 0)
-
-    //Task.task cp "Source Han Sans CN Normal" FontStyle.Regular
-    printfn "Total converted glyphs: %d" (List.length cp)
-    printfn "Press any key to close..."
-    Console.ReadKey() |> ignore
+      //Task.task cp "Source Han Sans CN Normal" FontStyle.Regular
+      printfn "Total converted glyphs: %d" (List.length cp)
+      printfn "Press any key to close..."
+      Console.ReadKey() |> ignore
+    | _ -> ()
     0 // return an integer exit code
