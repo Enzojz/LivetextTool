@@ -14,7 +14,6 @@ module Lua =
         | X of (int * Lua) list    // [x] = ..
         | A of Lua list            // a table
         | R of Lua list            // Root
-        | C of (bool * Lua)
         | RT of Lua                // Return
         | VA of string             // Ref
     
@@ -80,6 +79,3 @@ module Lua =
         | F (f, x) -> (sprintf "function %s() return " f) + (printLua (indent + 1) x) + " end"
         | VA v -> v
         | RT l -> (sprintf "return %s" (printLua (indent + 1) l))
-        | C (c, x) -> 
-            if c then (printLua indent x)
-            else ""
