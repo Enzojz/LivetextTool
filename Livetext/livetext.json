@@ -13,19 +13,7 @@
     ,
     "tasks" : [
         {
-            "font" : "Lato",
-            "isItalic" : false,
-            "isBold" : false,
-            "colors" : ["#F2F2F2", "#000000", "#101727", "#00257E", "#0179C7"] 
-        },
-        {
-            "font" : "Lato",
-            "isItalic" : false,
-            "isBold" : true,
-            "colors" : ["#F2F2F2", "#000000", "#101727", "#00257E", "#0179C7"] 
-        },
-        {
-            "font" : "Alte DIN 1451 Mittelschrift",
+            "font" : "Arial",
             "isItalic" : false,
             "isBold" : false,
             "colors" : ["#F2F2F2", "#000000", "#101727", "#00257E", "#0179C7"] 

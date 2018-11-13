@@ -153,8 +153,8 @@ module Output =
         }
       mesh
       
-    let generateModel meshPath outputPath colors (glyph : uint32) =
-      let mdl i = 
+    let generateModel meshPath outputPath basicColors colors (glyph : uint32) =
+      let mdl meshPath i = 
         F ("data",
           P [
             ("collider", P [
@@ -169,7 +169,7 @@ module Output =
                 ("animations", A []);
                 ("children", A [
                   P [
-                    ("id", S (meshPath + glyph.ToString() + ".msh"));
+                    ("id", S meshPath);
                     ("transf", A (List.map (V) [1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1]));
                     ("type", S "MESH")
                   ]
@@ -186,7 +186,25 @@ module Output =
         )
       |> printLua 0 in
 
-      colors |> List.iteri (fun i (color : Color) -> File.WriteAllText(outputPath + (sprintf "C%02X%02X%02X" color.R color.G color.B) + "/" + glyph.ToString() + ".mdl", mdl i))
+      basicColors 
+      |> List.map (fun (color : Color) -> 
+        sprintf "%sC%02X%02X%02X/%s.mdl" outputPath color.R color.G color.B (glyph.ToString()),
+        meshPath + glyph.ToString() + ".msh"
+      )
+      |> List.iteri (fun i (mdlPath, meshPath) -> File.WriteAllText(mdlPath, mdl meshPath i))
+            
+      let colorMeshPath = 
+        colors
+        |> List.map (fun (color : Color) -> sprintf "%02X%02X%02X" color.R color.G color.B)
+        |> List.fold (+) ""
+        |> sprintf "%s/%s/" meshPath
+
+      colors 
+      |> List.map (fun (color : Color) -> 
+        sprintf "%sC%02X%02X%02X/%s.mdl" outputPath color.R color.G color.B (glyph.ToString()),
+        colorMeshPath + glyph.ToString() + ".msh"
+      )
+      |> List.iteri (fun i (mdlPath, meshPath) -> File.WriteAllText(mdlPath, mdl meshPath i))
       
     let GetFontParams (font : Font) cp =
       use graphics = Graphics.FromHwnd IntPtr.Zero
