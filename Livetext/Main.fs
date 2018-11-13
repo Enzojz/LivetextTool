@@ -24,7 +24,7 @@ let main argv =
     
     printfn "!NOT ALL FONTS ARE FREEWARE!"
     printfn "Press Y to confirm that you have the correct license for the intended usage, "
-    printfn "otherwise please press any key to close..."
+    printfn "otherwise please press any other key to close..."
 
     match Console.ReadKey().KeyChar with
     | 'Y' | 'y' ->

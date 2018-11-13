@@ -264,7 +264,7 @@ module Output =
        |> printLua 0
       System.IO.File.WriteAllText(scriptPath, lua);
             
-    let extractPolygon materials transMaterials outputPath (font : Font) =
+    let extractPolygon materials transMaterial outputPath (font : Font) =
       let transform = 
         use path = new GraphicsPath()
         path.AddString("M", font.FontFamily, (int)font.Style, font.Size, new PointF(0.0f, 0.0f), StringFormat.GenericTypographic)
@@ -349,7 +349,7 @@ module Output =
           indices = List.init (List.length vertices / 3) (fun i -> new Tuple<int, int, int>(i * 3, i * 3 + 1, i * 3 + 2));
         }
 
-        let (blob, msh) = if vertices.IsEmpty then Mesh.generate squareMesh transMaterials else Mesh.generate mesh materials
+        let (blob, msh) = if vertices.IsEmpty then Mesh.generate squareMesh (List.init (List.length materials) (fun _ -> transMaterial)) else Mesh.generate mesh materials
       
         let mshPath = outputPath + glyph.ToString() + ".msh"
         let blobPath = mshPath + ".blob"

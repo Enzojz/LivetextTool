@@ -36,7 +36,7 @@ module Task =
       |> ignore
       Directory.CreateDirectory(scriptsPath + "livetext/")|> ignore
       
-      let trans = colors |> List.map (fun _ -> Output.drawColorTexture midFix texturesPath materialPath (Color.FromArgb(0, 255, 255, 255)))
+      let trans = Output.drawColorTexture midFix texturesPath materialPath (Color.FromArgb(0, 255, 255, 255))
       let [basicMaterials; colorMaterials] = 
         [basicColors;colors]
         |> List.map (List.map (Output.drawColorTexture midFix texturesPath materialPath))
@@ -49,7 +49,7 @@ module Task =
       |> Array.Parallel.iter
         (fun c ->
             extractBasicPolygon c
-            extractColorPolygon c
+            if List.length colorMaterials = 0 then () else extractColorPolygon c
             generateModel c
         )
 
