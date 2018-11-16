@@ -275,25 +275,34 @@ module Output =
       
       fun (glyph : uint32) ->
         //bmp check
-        let check (triangles : DelaunayTriangle list) = 
-          let size = new Size(1000, 1000)
+        let check (poly : Vector2 list list) (triangles : DelaunayTriangle list) = 
+          let size = new Size(1000, 1300)
           let bmp = new Bitmap(size.Width, size.Height)
           let rect = new Rectangle(new Point(0, 0), size)
-          let brush = new Pen(new SolidBrush(Color.Black))
+          let brushOutline = new Pen(new SolidBrush(Color.Black), 2.0f)
+          let brush = new Pen(new SolidBrush(Color.Red))
           let g = Graphics.FromImage(bmp)
           g.SmoothingMode <- SmoothingMode.AntiAlias;
           g.InterpolationMode <- InterpolationMode.HighQualityBicubic;
           g.PixelOffsetMode <- PixelOffsetMode.HighQuality;
           g.TextRenderingHint <- TextRenderingHint.AntiAliasGridFit;
           g.FillRectangle(new SolidBrush(Color.White), rect);
-          g.DrawLine(brush, 0, 800, 1000, 800)
+          g.DrawLine(brush, 0, 300, 1000, 300)
           g.DrawRectangle(brush, rect)
           triangles |> List.iter (fun t ->
-            g.DrawPolygon(brush, t.Points |> Seq.map (fun p -> new Point(int (p.X * 10.0), int (-p.Y * 10.0))) |> Seq.toArray)
+            g.DrawPolygon(brush, t.Points |> Seq.map (fun p -> new Point(int (p.X * 10.0), int (-p.Y * 10.0  + 300.0))) |> Seq.toArray)
+          )
+          poly 
+          |> List.map (fun (hp :: rp) -> hp::rp@[hp])
+          |> List.map (List.map (fun p -> new PointF(p.X * 10.0f, -p.Y * 10.0f + 300.0f)) >> List.toArray)
+          |> List.iteri (fun i p -> 
+            g.DrawLines(brushOutline, p); 
+            g.DrawString(i.ToString(), new Font("Arial",10.0f), new SolidBrush(Color.Black), p.[0]);
+            p |> Array.rev |> Array.tail |> Array.rev |> Array.iteri (fun i p -> g.DrawString("  " + i.ToString(), new Font("Arial",10.0f), new SolidBrush(Color.Blue), p));
           )
           g.Flush()
-          Directory.CreateDirectory(outputPath + "error/") |> ignore
-          bmp.Save(outputPath + "error/" + glyph.ToString() + ".bmp")
+          Directory.CreateDirectory("check/" + outputPath) |> ignore
+          bmp.Save("check/" + outputPath + glyph.ToString() + ".bmp")
 
         let pts  = 
           use path = new GraphicsPath()
@@ -334,7 +343,11 @@ module Output =
               |> List.collect(fun p -> List.ofSeq p.Triangles)
             with 
             | _ -> printfn "Error parsing %x" glyph; []
-        //check triangles;
+        
+        check (poly 
+                |> List.map Poly.selfIntersection 
+                |> List.concat) triangles;
+        
         let vertices = 
           triangles
           |> List.collect(fun t -> List.ofSeq t.Points)

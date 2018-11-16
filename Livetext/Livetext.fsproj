@@ -58,7 +58,6 @@
     <Compile Include="Output.fs" />
     <Compile Include="Task.fs" />
     <Compile Include="Main.fs" />
-    <None Include="readme.md" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Costura">

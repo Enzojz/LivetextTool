@@ -45,6 +45,7 @@ module Task =
       let extractColorPolygon= Output.extractPolygon colorMaterials trans colorMeshPath font
       let generateModel = Output.generateModel midFix (modelPath + midFix) basicColors colors
       cp
+      //|> List.iter
       |> List.toArray
       |> Array.Parallel.iter
         (fun c ->
