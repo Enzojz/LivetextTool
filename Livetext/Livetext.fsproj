@@ -54,7 +54,6 @@
     <Compile Include="Lua.fs" />
     <Compile Include="Import.fs" />
     <Compile Include="Mesh.fs" />
-    <Compile Include="Poly.fs" />
     <Compile Include="Output.fs" />
     <Compile Include="Task.fs" />
     <Compile Include="Main.fs" />
@@ -64,7 +63,7 @@
       <HintPath>..\packages\Costura.Fody.3.1.6\lib\net46\Costura.dll</HintPath>
     </Reference>
     <Reference Include="FSharp.Core">
-      <HintPath>..\packages\FSharp.Core.4.5.2\lib\net45\FSharp.Core.dll</HintPath>
+      <HintPath>..\packages\FSharp.Core.4.5.3\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="FSharp.Data">
       <HintPath>..\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll</HintPath>
@@ -72,10 +71,10 @@
     <Reference Include="LibSquishNet">
       <HintPath>..\packages\LibSquishNet.1.11.5792.20541\lib\net46\LibSquishNet.dll</HintPath>
     </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="Poly2Tri.NetStandard">
-      <HintPath>..\packages\Poly2Tri.NetStandard.1.0.2\lib\net46\Poly2Tri.NetStandard.dll</HintPath>
+    <Reference Include="LibTessDotNet">
+      <HintPath>..\LibTessDotNet.dll</HintPath>
     </Reference>
+    <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />

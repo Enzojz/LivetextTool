@@ -9,14 +9,13 @@ open System.Drawing.Drawing2D
 open System.Drawing.Text
 open System.Runtime.InteropServices
 open System.IO
-open Poly2Tri
 open Squish
 open Mesh
 open Lua
 open Import
+open LibTessDotNet
 
 module Output =
-    open Poly2Tri.Triangulation.Delaunay
 
     //[<Flags>]
     type DDSFlags =
@@ -275,7 +274,18 @@ module Output =
       
       fun (glyph : uint32) ->
         //bmp check
-        let check (poly : Vector2 list list) (triangles : DelaunayTriangle list) = 
+        let check (poly : Vector2 list list) (vertices : Vector2 list) = 
+          let triangles =
+            match poly with
+            | [] -> []
+            | _ -> vertices
+                    |> List.fold (fun t v -> 
+                        match t with 
+                        | [v1] :: r -> [v; v1] :: r 
+                        | [v2; v1] :: r -> [v; v2; v1] :: r 
+                        | _ -> [v] :: t 
+                      ) []
+
           let size = new Size(1000, 1300)
           let bmp = new Bitmap(size.Width, size.Height)
           let rect = new Rectangle(new Point(0, 0), size)
@@ -290,7 +300,7 @@ module Output =
           g.DrawLine(brush, 0, 300, 1000, 300)
           g.DrawRectangle(brush, rect)
           triangles |> List.iter (fun t ->
-            g.DrawPolygon(brush, t.Points |> Seq.map (fun p -> new Point(int (p.X * 10.0), int (-p.Y * 10.0  + 300.0))) |> Seq.toArray)
+            g.DrawPolygon(brush, t |> List.map (fun p -> new Point(int (p.X * 10.0f), int (-p.Y * 10.0f  + 300.0f))) |> List.toArray)
           )
           poly 
           |> List.map (fun (hp :: rp) -> hp::rp@[hp])
@@ -330,28 +340,26 @@ module Output =
           match poly with
           | [] -> 0.0f
           | _ -> poly |> List.concat |> List.map (fun v -> v.X) |> List.min
+        
+        let tess = new Tess()
 
-        let triangles = 
+        match poly.Length with
+        | 0 -> ()
+        | _ -> 
+          poly |> List.iter (fun poly -> 
+            let ps = poly |> List.map (fun v -> new ContourVertex( Position = new Vec3(X = v.X, Y = v.Y, Z = 0.0f) ))
+            tess.AddContour(List.toArray ps)
+          )
+        
+        tess.Tessellate(WindingRule.NonZero, ElementType.Polygons, 3)
+              
+        let vertices = 
           match poly.Length with
           | 0 -> []
-          | _ ->
-            let polygonSet = Poly.generatePolygonSet(poly)
-            try 
-              P2T.Triangulate(polygonSet)
-              polygonSet
-              |> List.ofSeq
-              |> List.collect(fun p -> List.ofSeq p.Triangles)
-            with 
-            | _ -> printfn "Error parsing %x" glyph; []
-        
-        check (poly 
-                |> List.map Poly.selfIntersection 
-                |> List.concat) triangles;
-        
-        let vertices = 
-          triangles
-          |> List.collect(fun t -> List.ofSeq t.Points)
-          |> List.map(fun p -> new Vector3(p.Xf - leftMost, 0.0f, -p.Yf) / font.Size)
+          | _ -> tess.Elements
+                 |> Array.map (fun e -> new Vector2(tess.Vertices.[e].Position.X, tess.Vertices.[e].Position.Y))
+                 |> Array.toList
+                 |> List.map(fun p -> new Vector3(p.X - leftMost, 0.0f, -p.Y) / font.Size)
 
         let mesh : MeshData = {
           normals = vertices |> List.map (fun _ -> new Vector3(0.0f, -1.0f, 0.0f));
