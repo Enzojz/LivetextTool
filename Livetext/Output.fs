@@ -275,16 +275,14 @@ module Output =
       fun (glyph : uint32) ->
         //bmp check
         let check (poly : Vector2 list list) (vertices : Vector2 list) = 
-          let triangles =
-            match poly with
-            | [] -> []
-            | _ -> vertices
-                    |> List.fold (fun t v -> 
-                        match t with 
-                        | [v1] :: r -> [v; v1] :: r 
-                        | [v2; v1] :: r -> [v; v2; v1] :: r 
-                        | _ -> [v] :: t 
-                      ) []
+          let triangles = 
+            vertices 
+            |> List.fold (fun t v -> 
+                match t with 
+                | [v1] :: r -> [v; v1] :: r 
+                | [v2; v1] :: r -> [v; v2; v1] :: r 
+                | _ -> [v] :: t 
+              ) []
 
           let size = new Size(1000, 1300)
           let bmp = new Bitmap(size.Width, size.Height)
@@ -352,14 +350,16 @@ module Output =
           )
         
         tess.Tessellate(WindingRule.NonZero, ElementType.Polygons, 3)
-              
-        let vertices = 
-          match poly.Length with
+        
+        let preVertices = match poly.Length with
           | 0 -> []
           | _ -> tess.Elements
                  |> Array.map (fun e -> new Vector2(tess.Vertices.[e].Position.X, tess.Vertices.[e].Position.Y))
                  |> Array.toList
-                 |> List.map(fun p -> new Vector3(p.X - leftMost, 0.0f, -p.Y) / font.Size)
+
+        let vertices = preVertices |> List.map(fun p -> new Vector3(p.X - leftMost, 0.0f, -p.Y) / font.Size)
+        
+        check poly preVertices
 
         let mesh : MeshData = {
           normals = vertices |> List.map (fun _ -> new Vector3(0.0f, -1.0f, 0.0f));
