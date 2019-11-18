@@ -152,8 +152,8 @@ module Output =
         }
       mesh
       
-    let generateModel meshPath outputPath basicColors colors (glyph : uint32) =
-      let mdl meshPath i = 
+    let generateModel meshPath outputPath colors materials (glyph : uint32) =
+      let mdl meshPath material = 
         F ("data",
           P [
             ("collider", P [
@@ -165,16 +165,18 @@ module Output =
             ]);
             ("lods", A [
               P [
-                ("animations", A []);
-                ("children", A [
-                  P [
-                    ("id", S meshPath);
-                    ("transf", A (List.map (V) [1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1]));
-                    ("type", S "MESH")
-                  ]
+                ("node", P[
+                  ("children", A [
+                      P [
+                      ("materials", A [S material]);
+                      ("mesh", S meshPath);
+                      ("name", S (sprintf "%d" glyph))
+                      ("transf", A (List.map (V) [1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1]));
+                      ]
+                  ]);
+                  ("name", S "RootNode");
+                  ("transf", A (List.map (V) [1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1]))
                 ]);
-                ("events", A []);
-                ("matConfigs", A [A [V i]]);
                 ("static", B true);
                 ("visibleFrom", V 0);
                 ("visibleTo", V 2000)
@@ -185,26 +187,14 @@ module Output =
         )
       |> printLua 0 in
 
-      basicColors 
+      colors 
       |> List.map (fun (color : Color) -> 
         sprintf "%sC%02X%02X%02X/%s.mdl" outputPath color.R color.G color.B (glyph.ToString()),
         meshPath + glyph.ToString() + ".msh"
       )
-      |> List.iteri (fun i (mdlPath, meshPath) -> File.WriteAllText(mdlPath, mdl meshPath i))
-            
-      let colorMeshPath = 
-        colors
-        |> List.map (fun (color : Color) -> sprintf "%02X%02X%02X" color.R color.G color.B)
-        |> List.fold (+) ""
-        |> sprintf "%s/%s/" meshPath
-
-      colors 
-      |> List.map (fun (color : Color) -> 
-        sprintf "%sC%02X%02X%02X/%s.mdl" outputPath color.R color.G color.B (glyph.ToString()),
-        colorMeshPath + glyph.ToString() + ".msh"
-      )
-      |> List.iteri (fun i (mdlPath, meshPath) -> File.WriteAllText(mdlPath, mdl meshPath i))
-      
+      |> List.zip materials
+      |> List.iter (fun (material, (mdlPath, meshPath)) -> File.WriteAllText(mdlPath, mdl meshPath (material  + ".mtl")))
+                  
     let GetFontParams (font : Font) cp =
       use graphics = Graphics.FromHwnd IntPtr.Zero
       graphics.PageUnit <- GraphicsUnit.Pixel;
@@ -263,7 +253,7 @@ module Output =
        |> printLua 0
       System.IO.File.WriteAllText(scriptPath, lua);
             
-    let extractPolygon materials transMaterial outputPath (font : Font) =
+    let extractPolygon outputPath (font : Font) =
       let transform = 
         use path = new GraphicsPath()
         path.AddString("M", font.FontFamily, (int)font.Style, font.Size, new PointF(0.0f, 0.0f), StringFormat.GenericTypographic)
@@ -370,9 +360,11 @@ module Output =
           indices = List.init (List.length vertices / 3) (fun i -> new Tuple<int, int, int>(i * 3, i * 3 + 1, i * 3 + 2));
         }
 
-        let (blob, msh) = if vertices.IsEmpty then Mesh.generate squareMesh (List.init (List.length materials) (fun _ -> transMaterial)) else Mesh.generate mesh materials
-      
+        //let (blob, msh) = if vertices.IsEmpty then Mesh.generate squareMesh (List.init (List.length materials) (fun _ -> transMaterial)) else Mesh.generate mesh materials
+        let (blob, msh) = if vertices.IsEmpty then Mesh.generate squareMesh else Mesh.generate mesh
+          
         let mshPath = outputPath + glyph.ToString() + ".msh"
         let blobPath = mshPath + ".blob"
         File.WriteAllBytes(blobPath, blob)
         File.WriteAllText(mshPath, msh)
+        vertices.IsEmpty

@@ -21,14 +21,7 @@ module Task =
       Directory.CreateDirectory(materialPath + "livetext/")    |> ignore
       Directory.CreateDirectory(texturesPath + "livetext/")    |> ignore
       Directory.CreateDirectory(meshPath + midFix)        |> ignore
-      let colorMeshPath = 
-        colors
-        |> List.map (fun color -> sprintf "%02X%02X%02X" color.R color.G color.B)
-        |> List.fold (+) ""
-        |> sprintf "%s%s%s/" meshPath midFix
-      colorMeshPath
-      |> Directory.CreateDirectory
-      |> ignore
+
       allColors 
       |> List.map (fun color -> sprintf "C%02X%02X%02X" color.R color.G color.B)
       |> List.map (sprintf "%s%s%s/" modelPath midFix)
@@ -37,21 +30,17 @@ module Task =
       Directory.CreateDirectory(scriptsPath + "livetext/")|> ignore
       
       let trans = Output.drawColorTexture midFix texturesPath materialPath (Color.FromArgb(0, 255, 255, 255))
-      let [basicMaterials; colorMaterials] = 
-        [basicColors;colors]
-        |> List.map (List.map (Output.drawColorTexture midFix texturesPath materialPath))
+      let materials = List.map (Output.drawColorTexture midFix texturesPath materialPath) allColors
         
-      let extractBasicPolygon= Output.extractPolygon basicMaterials trans (meshPath + midFix) font
-      let extractColorPolygon= Output.extractPolygon colorMaterials trans colorMeshPath font
-      let generateModel = Output.generateModel midFix (modelPath + midFix) basicColors colors
+      let extractPolygon= Output.extractPolygon (meshPath + midFix) font
+      let generateModel = Output.generateModel midFix (modelPath + midFix) allColors
       cp
       //|> List.iter
       |> List.toArray
       |> Array.Parallel.iter
         (fun c ->
-            extractBasicPolygon c
-            if List.length colorMaterials = 0 then () else extractColorPolygon c
-            generateModel c
+            let isEmpty = extractPolygon c in
+            generateModel materials c
         )
 
       Output.generateDescription font cp (scriptsPath + "livetext/" + key + ".lua")
