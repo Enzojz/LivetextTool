@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Lua.fs" />
+    <Compile Include="Import.fs" />
+    <Compile Include="Mesh.fs" />
+    <Compile Include="Output.fs" />
+    <Compile Include="Task.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Data" Version="3.3.2" />
+    <PackageReference Include="LibSquishNet" Version="1.11.5792.20541" />
+    <PackageReference Include="System.Drawing.Common" Version="4.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="LibTessDotNet">
+      <HintPath>..\LibTessDotNet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "Livetext.Core": {
+      "commandName": "Executable"
+    }
+  }
+}
