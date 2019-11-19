@@ -16,14 +16,12 @@
 
   <ItemGroup>
     <PackageReference Include="FSharp.Data" Version="3.3.2" />
-    <PackageReference Include="LibSquishNet" Version="1.11.5792.20541" />
     <PackageReference Include="System.Drawing.Common" Version="4.6.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="LibTessDotNet">
-      <HintPath>..\LibTessDotNet.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\LibSquishNet.Core\LibSquishNetCore.csproj" />
+    <ProjectReference Include="..\LibTessNet.Core\LibTessNetCore.csproj" />
   </ItemGroup>
 
 </Project>
